@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>自定义error信息</title>
+</head>
+<body>
+<script>
+    function MyError(msg) {
+        this.name = "这是我自定义的错误处理器";
+        this.message = msg || '默认自定义错误信息';
+    }
+    MyError.prototype = Object.create(Error.prototype);
+    MyError.prototype.constructor = MyError;
+    try{
+        throw new MyError('测试一下');
+    }catch (e){
+        console.log(e.name + e.message);
+    }
+</script>
+</body>
+</html>
