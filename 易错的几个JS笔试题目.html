@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>易错的几个笔试题目</title>
+</head>
+
+<body>
+    <script>
+        //1、闭包：同步和异步代码的区别、变量作用域、闭包等概念
+        for (var i = 0; i < 5; i++) {
+            setTimeout(function () {
+                console.log(new Date, i);  // 后执行 5 5 5 5 5
+            }, 2000);
+        }
+        console.log(new Date, i);  //先执行 5
+
+        //2、改造上面的输出，变成12345。
+        //利用 IIFE（Immediately Invoked Function Expression：声明即执行的函数表达式）
+        for (var i = 0; i < 5; i++) {
+            (function (j) {
+                setTimeout(function () {
+                    console.log(new Date, j);
+                }, 3000);
+            })(i);
+        }
+        //3、JS 中基本类型（Primitive Type）的参数传递是按值传递（Pass by Value）的特征
+
+        var output = function (i) {
+            setTimeout(function () {
+                console.log(new Date, i);
+            }, 1000);
+        };
+        for (var i = 0; i < 5; i++) {
+            output(i);//这里传过去的i值被复制了。
+        }
+        console.log(new Date, i);
+
+
+        //4、使用let,最后那个输出使用的 i 在其所在的作用域中并不存在，i 只存在于循环内部。
+        for (let i = 0; i < 5; i++) {
+            setTimeout(function () {
+                console.log(new Date, i);
+            }, 1000);
+        }
+        console.log(new Date, i);
+
+        //5、代码执行时，立即输出 0，之后每隔 1 秒依次输出 1,2,3,4，循环结束后在大概第 5 秒的时候输出 5
+        //如下方法粗暴不加分
+        for (var i = 0; i < 5; i++) {
+            (function (j) {
+                setTimeout(function () {
+                    console.log(new date, j);
+                }, 1000 * j); //这里修改0-4的计时器
+            })(i);
+        }
+        setTimeout(function () {
+            console.log(new Date, i) //这里增加定时器，超时设置为5S
+        }, 1000 * i);
+
+        //6、将5的代码用ES6进行改造
+        const tasks = [];
+        for(var i=0;i<5;i++){  //这里 i 的声明不能改成 let，如果要改该怎么做？
+            ((j)=>{
+                tasks.push(new Promise((resolve)=>{
+                    setTimeout(()=>{
+                        console.log(new Date,j);
+                        resolve(); //这里一定要 resolve，否则代码不会按预期 work
+                    },1000*j)
+                }));
+            })(i);
+        }
+        Promise.all(tasks).then(()=>{
+            setTimeout(()=>{
+                console.log(new Date,i);
+            },1000); //这里只需要把超时设置为1秒
+        })
+        
+        //7、继续优化6的代码
+        const tasks = []; //这里存放异步的promise
+        const output = (i)=>new Promise((resolve)=>{
+            setTimeout(()=>{
+                console.log(new Date,i);
+                resolve();
+            },1000*i);
+        });
+        //生成全部的异步操作
+        for(var i=0;i<5;i++){
+            tasks.push(output(i));
+        }
+        // 异步操作完成之后，输出最后的 i
+        Promise.all(tasks).then(()=>{
+            setTimeout(()=>{
+                console.log(new Date,i);
+            },1000);
+        })
+
+        //8、最优化的ES7：技术自驱力，用漂亮的方式解决工程领域的问题
+        //async await
+        //模拟其他语言中的 sleep，实际上可以是任何异步操作
+        const sleep = (timeoutMS)=>new Promise((resolve)=>{
+            setTimeout(resolve,timeoutMS);
+        })
+        (async()=>{ //声明即执行的 async 函数表达式
+            for(var i=0;i<5;i++){
+                await sleep(1000);
+                console.log(new Date,i);
+            }
+            await sleep(1000);
+            console.log(new Date,i);
+
+        })()
+
+
+    </script>
+</body>
+
+</html>
