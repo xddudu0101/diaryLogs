@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>js内存空间及this关键词详解</title>
+</head>
+<body>
+理解js内存空间，对于我们理解很多题目大有帮助，特别是一些面试题目。<br />
+var a=20; // 变量对象 <br />
+var b=a; <br />
+b=30; <br />
+//这时a的值是多少？  //20 <br />
+<img src="./images/基础数据类型也可以理解为栈里的数据都是按值访问.png" alt=""> <br />
+var m = {a:10,b:20} // 变量m存在于变量对象中也可以理解为栈，{a:10,b:20}作为对象存在于堆内存中<br />
+var n=m;  <br />
+n.a =15; <br />
+//这时m.a的值是多少？    //15  <br />
+<img src="./images/是在操作对象的引用而不是实际的对象.png" alt="">  <br />
+还有一个this方面的面试题目。  <br />
+var a = 20;  <br />
+var haoroomsobj = {  <br />
+a: 10,  <br />
+c: this.a + 20,  <br />
+fn: function () {  <br />
+    return this.a;  <br />
+}
+}
+
+console.log(haoroomsobj.c);   //40  <br />
+haoroomsob是全局声明haoroomsobj.c在非严格模式下面指向的是window全局对象，<br />
+console.log(haoroomsobj.fn()); //10  <br />
+fn()是haoroomsobj对象下面的函数，这里this指向的是haoroomsobj，因此输出的是10 <br />
+var haoobj=haoroomsobj.fn;  <br />
+console.log(haoobj())  //20  <br />
+haoobj()函数是独立调用，指向的是全局，因此输出20
+
+<b>堆与栈</b>  <br />
+变量对象与基础数据类型(例如：Undefined、Null、Boolean、Number、String)都放在栈里。  <br />
+引用数据类型，比如：对象，数组等一般都放在堆（heap）里  <br />
+
+<b>重点this：总结3点如下</b>  <br />
+<ol>
+    <li>this的指向，是在函数被调用的时候确定的</li>
+    <li>函数调用时，看其是否被某个对象所拥有，假如被某个对象拥有，那么函数中的this，指向的是其拥有的对象。<br />
+        例如：haoroomsobj.fn()<br />
+        fn()函数被haoroomsobj所拥有，那么fn里面的this，指向的是haoroomsobj
+    </li>
+    <li>如果函数独立调用，那么该函数内部的this，则指向undefined。在非严格模式中，当this指向undefined时，它会被自动指向全局对象。<br />
+        例如haoobj() 是独立调用，那么haoobj函数里面的this会指向undefined，在非严格模式下面指向的是全局对象。
+    </li>
+</ol>
+<strong>
+    this关键词要理清函数调用，是独立调用还是被某个对象所调用<br />
+    独立调用在非严格模式下面指向的是全局，被某个对象所调用，this指向的是某个对象！
+</strong>
+</body>
+</html>
