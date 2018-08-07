@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>词法作用域</title>
+</head>
+<body>
+    作用域”我们知道是一套规则，用来管理引擎如何在当前作用域以及嵌套的子作用域中根据标识符名称进行变量查找。
+
+    作用域有两种主要工作模型：词法作用域和动态作用域。
+    大多数语言采用的都是词法作用域，少数语言采用动态作用域（例如 Bash 脚本），这里我们主要讨论词法作用域。
+
+    大部分标准语言编译器的第一个工作阶段叫做词法化。
+
+    <script>
+        var a=2;
+        function foo1(){
+            console.log(a);   //2
+        }  
+        function foo2(){
+            var a=10;
+            foo1();
+        }
+        foo2();     //2
+        //词法作用域只取决于代码书写时的位置，
+        //那么在这个例子中，函数 foo1 定义时的位置决定了它的作用域，
+        //通过下图理解：
+
+    </script>
+     foo1 对变量 a 进行 RHS 查询时，在自己的作用域没有找到，引擎会去 foo1 的上级作用域（也就是全局作用域）中查找，
+     而并不会去 foo2 的作用域中查找，最终在全局作用域中找到 a 的值为 2。
+    <img src="images/词法作用域.png" alt="词法作用域">
+    <strong>
+            总结来说，无论函数在哪里被调用，也无论它如何被调用，
+            它的词法作用域都只由函数被声明时所处的位置决定。
+    </strong>
+    <i>动态改变作用域。</i>
+    <script>
+        function foo(str){
+            eval(str); //‘欺骗’词法
+            console.log(a);
+        }
+        var a=2;
+        foo("var a =10;");  //10
+    </script>
+    <i>在严格模式下，eval(...) 在运行时有自己的词法作用域，意味着其中的声明无法修改所在的作用域。</i>
+    <script>
+        'use strict;'
+        function foo (str) {
+        eval(str);        // eval() 有自己的作用域，所以并不会修改 foo 的词法作用域
+        console.log(a);
+        }
+        var a = 2;
+        foo("var a = 10;");  //2
+    </script>
+    <i>with 通常被当做重复引用同一个对象中的多个属性的快捷方式，可以不需要重复引用对象本身。</i>
+    <i>严格模式下，with 被完全禁止使用。</i>
+    <script>
+    var obj={
+        a:2,
+        b:3
+    };
+    with(obj){
+        console.log(a); //2
+        console.log(b); //3
+        c=4;
+    }
+    console.log(c);  // 4, c 被泄露到全局作用域上
+    </script>
+    <i> try...catch,try...catch 可以测试代码中的错误。try 部分包含需要运行的代码，而 catch 部分包含错误发生时运行的代码。</i>
+    <script>
+        try{
+            foo();        
+         }catch(err){
+             console.log(err);
+             var a=2;  //// 打印出 "ReferenceError: foo is not defined at <anonymous>:2:4"
+         }
+    </script>
+
+
+
+
+</body>
+</html>
