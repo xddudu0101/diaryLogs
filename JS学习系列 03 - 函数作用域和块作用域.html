@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>JS学习系列 03 - 函数作用域和块作用域</title>
+</head>
+
+<body>
+    <div>1. 函数中的作用域</div>
+    函数作用域的含义是指，属于这个函数的任何声明（变量或函数）都可以在这个函数的范围内使用及复用（包括这个函数嵌套内的作用域）。
+    <script>
+        //举个例子
+        function foo(a) {
+            var b = 2;
+            function bar() {
+
+            }
+            var c = 3;
+        }
+        bar();//报错，ReferenceError: bar is not defined
+        console.log(a, b, c)//报错，原因同上
+    </script>
+
+    <div>下面这个例子中，我们可以任意修改对象 obj 内部的值，在某种情况下这并不是我们所期望的，采用函数作用域就可以解决这个问题，私有化变量 a 。</div>
+    <script>
+        var obj = {
+            a: 2,
+            getA: function () {
+                return this.a;
+            }
+        };
+        obj.a = 4;
+        obj.getA();//4
+    </script>
+    <div>我们要私有化a 的值</div>
+    <script>
+        var obj = (function () {
+            var a = 2;
+            return {
+                getA: function () {
+                    return a;
+                },
+                setA: function (val) {
+                    a = val;
+                }
+            }
+        }());
+        obj.a = 4;
+        obj.getA();//2
+        obj.setA(8);
+        obj.getA();//8
+    </script>
+    <div>“隐藏”作用域中的变量和函数所带来的另一个好处，是可以避免同名标识符之间的冲突，冲突会导致变量的值被意外覆盖。</div>
+    <script>
+        function foo() {
+            function bar(a) {
+                i = 3;   // 修改了 for 循环所属作用域中的 i
+                console.log(a + i);
+            }
+            for (var i = 0; i < 10; i++) {
+                bar(i * 2); // 这里因为 i 总会被设置为 3 ，导致无限循环
+            }
+        }
+        foo();
+    //bar(...) 内部的赋值表达式 i = 3 意外的覆盖了声明在 foo(...) 内部 for 循环中的 i ，
+    //在这个例子中因为 i 始终被设置为 3 ，永远满足小于 10 这个条件，导致无限循环。
+    </script>
+
+    <div>如果 function 是声明中的第一个词，那么就是一个函数声明，否则就是一个函数表达式。</div>
+    <script>
+        function foo() { } //函数声明
+        setTimeout(function () { console.log('i wait for one second') }, 1000) //匿名函数表达式
+        setTimeout(function timerHandler() {  //具名函数表达式又叫行内函数表达式
+            console.log("I wait for one second.")
+        }, 1000);
+    </script>
+    <div>立即执行函数表达式（IIFE）</div>
+    <script>
+        var a = 2;
+        (function foo() {
+            var a = 3;;
+            console.log(a); //3
+        })();
+        console.log(a); //2;
+    </script>
+    <div>try ... catch</div>
+    <script>
+        try {
+            undefined();   // 非法操作
+        } catch (err) {
+            console.log(err);  // 正常执行
+        }
+        console.log(err);  // 报错，err is not defined
+    </script>
+    <div>块级作用域let。一个 let 可以发挥优势的典型例子就是 for 循环</div>
+    <script>
+        var lists = document.getElementsByName('li');
+        for (let i = 0, length = lists.length; i < length; i++) {
+            console.log(i);
+            lists[i].onclick = function () { //它将其重新绑定到了循环的每一个迭代中，确保上一个循环迭代结束时的值重新进行赋值。
+                console.log(i);  //点击每个 li 元素的时候，都是相对应的 i 值，而不像用 var 声明 i 的时候，因为没有块作用域，所以在回调函数通过闭包查找 i 的时候找到的都是最后的 i 值
+            };
+        };
+        console.log(i);      // 报错，i is not defined
+
+        //第2种方法，使用立即执行函数
+        var lists = document.getElementsByName('li');
+        for(var i=0,length=lists.length;i<length;i++){
+            lists[i].onclick = (function(j){
+                return function(){
+                    console.log(j);
+                }
+            }(i));
+        }
+        //第3种方法，使用第2种方法改版的立即执行函数
+        var lists = document.getElementsByName('li');
+        for(var i=0,length = lists.length;i<length;i++){
+            (function(i){
+                lists[i].onclick = function(){
+                    console.log(i);
+                }
+            }(i))
+        }
+    </script>
+
+
+</body>
+
+</html>
