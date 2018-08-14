@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>变量提升</title>
+</head>
+<body>
+    <div>1、声明提升</div>
+    <script>
+        a =2;
+        var a;
+        console.log(a); //2
+    </script>
+    <script>
+        console.log(a); //undefined
+        var a=2;   //两个声明，var a; a=2;第一个定义声明是在编译阶段进行的
+                  //第二个赋值声明会被留在原地等待执行阶段   
+
+        //上面2行代码等同于下面3行，函数声明会被提升，但是函数表达式不会被提升。
+        var a;
+        console.log(a);
+        a = 2;
+
+    </script>
+
+
+
+
+
+
+
+
+
+</body>
+</html>
