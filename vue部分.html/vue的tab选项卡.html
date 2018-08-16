@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>vue的tab选项卡切换</title>
+</head>
+<body>
+    <img src="../images/vue的tab切换.gif" alt="">
+    <div>关键代码及分析如下：</div>
+
+    <template>
+        // 每一个 tab 绑定了一个点击事件，传入的参数对应着 tab 下的组件名
+        <div class="tabs">
+         <div class="tab" @click="toggleTab('prince')"><a>小王子</a></div>
+         <div class="tab" @click="toggleTab('rose')"><a>小玫瑰</a></div>
+         <div class="tab" @click="toggleTab('fox')"><a>小狐狸</a></div>
+        </div>
+        // 子组件，显示不同的 tab
+        // is 特性动态绑定子组件
+        // keep-alive 将切换出去的组件保留在内存中
+        <prince :is="currentTab" keep-alive></prince>
+    </template>
+    <script>
+        // 引入子组件
+        import prince from './components/prince';
+        import rose from './components/rose';
+        import fox from './components/fox';
+        export default {
+         name: 'app',
+         data () {
+          return {
+           currentTab: 'prince' // currentTab 用于标识当前触发的子组件
+          };
+         },
+         components: { // 声明子组件
+          prince,
+          rose,
+          fox
+         },
+         methods: {
+          toggleTab: function(tab) {
+           this.currentTab = tab; // tab 为当前触发标签页的组件名
+          }
+         }
+        }
+        </script>
+
+    <div>使用动态组件实现 Tab 标签页切换的基本过程可以概括为：</div>
+    <div>
+        1、在父组件中定义一个主 tab 标签页，用于切换，同时为每个 tab 绑定点击事件，传入该 tab 的子组件名，最后引入并定义子组件
+        2、子组件中是各 tab 标签页的内容
+        3、使用 is 特性动态切换子组件，使用 kee-alive 缓存
+        4、is 特性一般用于原生 HTML 元素扩展
+
+    </div>
+    <div>
+        举个栗子，一般在 ul 标签中只能嵌套 li 标签，但是我们现在想在 ul 标签内使用自定义组件 v-li。
+    <ul>
+    <v-li></v-li>
+    </ul>
+    而这样写肯定是不行的，这就需要用到 is 特性了。
+    <ul>
+    <li is="v-li"></li>
+    </ul>
+    这也就是为什么利用 is 特性可以实现动态切换组件的效果。
+    </div>
+
+</body>
+</html>

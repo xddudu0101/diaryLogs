@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>圣杯布局和双飞翼布局</title>
+    <style>
+        body {
+      min-width: 550px;  
+    }
+    #HolyGrail {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+    #container {
+      display: flex;
+      flex: 1;
+    }
+    #center {
+      background-color: #e9e9e9;
+      flex: 1;
+    }
+    #left {
+      background-color: red;
+      order: -1;
+      width: 150px;
+    }
+    #right {
+      background-color: blue;
+      width: 150px;
+    }
+    #header, 
+    #footer {
+      height: 50px;
+      background-color: #c9c9c9;
+    }
+    </style>
+</head>
+
+<body>
+    
+     <div> 圣杯布局（flexbox实现）</div>
+     <img src="./images/圣杯布局（flexbox实现）.png" alt="">
+     <div id="HolyGrail">
+        <div id="header">#header</div>
+      
+        <div id="container">
+          <div id="center" class="column">#center</div>
+          <div id="left" class="column">#left</div>
+          <div id="right" class="column">#right</div>
+        </div>
+      
+        <div id="footer">#footer</div>
+
+
+
+
+</body>
+
+</html>
