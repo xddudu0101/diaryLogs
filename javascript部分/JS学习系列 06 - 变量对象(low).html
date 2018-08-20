@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>JS学习系列 06 - 变量对象</title>
+</head>
+<body>
+    <div>
+        变量对象就是执行上下文和作用域链中间的桥梁。
+    </div>
+    <div>
+        1. 执行上下文包含什么:
+        一个执行上下文我们可以抽象的理解为对象（object）。
+        每一个执行上下文都有一些属性（又称为上下文状态），它们用来追踪关联代码的执行进度。
+    </div>
+    <div>
+        变量对象(variable object) 是与执行上下文相关的数据作用域(scope of data) 。它是与上下文关联的特殊对象，用于存储被定义在上下文中的 变量(variables) 和 函数声明(function declarations) 。
+    </div>
+    <div>
+        因为变量对象是一个抽象的概念，所以并不能通过变量对象的名称直接访问，但是却可以通过别的方法来间接访问变量对象，例如在全局上下文环境的变量对象会有一个属性 window (DOM 中) 可以引用变量对象自身，全局上下文环境的另一个属性 this 也指向全局上下文环境的变量对象。
+    </div>
+    <script>
+    //举个例子
+    var a=2;
+    function foo(num){
+        var b=5;
+    }
+    (function exp(){
+        console.log(111);
+    });
+    foo(10);
+    
+    //这里对应的变量对象是：
+    VO(globalContext) = {
+        // 一些全局环境初始化时系统自动创建的属性： Math、String、Date、parseInt等等
+        // 全局上下文的变量对象中有一个属性可以访问到自身，在浏览器中这个属性是 window ，在 node 中这个属性是 global
+        window:global,
+        a:10,
+        foo:<reference  to function >
+    };
+
+    // foo 函数上下文的变量对象
+    VO(foo functionContext) = {
+        num: 10,
+        b: 5
+    };
+    </script>
+    <div>
+        4. 代码是如何被处理的
+        <div>
+            在第1节中我们讲过js 代码的编译过程，其中有一步叫作预编译，是说在代码执行前的几微秒会首先对代码进行编译，形成词法作用域，然后执行。
+        </div>
+    </div>
+
+</body>
+</html>
