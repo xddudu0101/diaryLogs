@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>underscore.js源码解析（一）</title>
+</head>
+<body>
+    <div>结构解析</div>
+    <script>
+    (function(){
+    // 创建一个root对象，在浏览器中表示为window（self）对象，在Node.js中表示global对象，
+    // 之所以用用self代替window是为了支持Web Worker
+    var root = typeof self == 'object' && self.self === self && self ||
+               typeof global == 'object' && global.global === global && global ||
+               this;
+    var previousUnderscore = root._; // 保存"_"(下划线变量)被覆盖之前的值
+    var ArrayProto = Array.prototype,objProto = Object.prototype;  // 原型赋值，便于压缩
+    // 将内置对象原型中的常用方法赋值给引用变量，以便更方便的引用
+    var push = ArrayProto.push,
+        slice = ArrayProto.slice,
+        toString = Object.toString,
+        hasOwnProperty = Object.hasOwnProperty;
+    // 定义了一些ECMAScript 5方法
+    var nativeIsArray = Array.isArray,
+        nativeKeys = Object.keys,
+        nativeCreate = Object.create;
+      var Ctor = function(){};    //跟神马裸函数有关，我也不清楚什么意思         
+      var _ = function(obj){  // 创建一个下划线对象  
+      // 如果在"_"的原型链上(即_的prototype所指向的对象是否跟obj是同一个对象，要满足"==="的关系    
+     if(obj instanceof _) return obj;
+     if(!(this instanceof _) ) return new _(obj);  // 如果不是，则构造一个
+     this._wrapped = obj; // 将underscore对象存放在_.wrapped属性中
+    }
+     // 针对不同的宿主环境, 将Undersocre的命名变量存放到不同的对象中
+    if(typeof exports != 'undefined' && !exports.nodeType){ //node.js
+        if(typeof module != 'undefined' && !module.nodeType && module.exports){
+            exports = module.exports = _;
+        }
+        exports._ = _;
+    }else{ //浏览器
+        root._ =_;
+    }
+  _.VERSION = '1.8.3'; //版本号
+
+// 创建一个chain函数，用来支持链式调用
+_.chain = function(obj){
+    var instance = _(obj); 
+    instance._chain = true;  //是否使用链式操作
+    return instance; 
+}
+// 返回_.chain里是否调用的结果, 如果为true, 则返回一个被包装的Underscore对象, 否则返回对象本身
+var chainResult = function(instance,obj){
+    return instance._chain ? _(obj).chain() : obj;
+};
+// 用于扩展underscore自身的接口函数
+_.mixin = function(obj){
+    //通过循环遍历对象来浅拷贝对象属性
+    _.each(_.functions(obj),function(name){
+        var func = _[name] = obj[name];
+        _prototype[name] = function(){
+            var args = [this._wrapped];
+            push.apply(args,arguments);
+            return chainResult(this,func.apply(_,args));
+        };
+    });
+};
+_.mixin(_);
+// 将Array.prototype中的相关方法添加到Underscore对象中, 这样Underscore对象也可以直接调用Array.prototype中的方法
+_.each(['pop','push','reverse','shift','sort','splice','unshift'],function(name){
+//方法引用
+var method = ArrayProto[name];
+_.prototype[name]=function(){
+    var ojb = this._wrapped; // 赋给obj引用变量方便调用
+    method.apply(obj,arguments);// 调用Array对应的方法
+    method.apply(obj,arguments);
+    if((name==='shift' || name === 'splice')&& obj.length ===0) {
+        delete obj[0];
+    }
+    return chainResult(this, obj);  //支持链式操作
+}
+// 同上，并且支持链式操作
+_.each(['concat','join','slice'],function(name){
+    var method = ArrayProto[name];
+    _.prototype[name]=function(){
+        //返回Array对象或者封装后的Array
+        return chainResult(this,method.apply(thsi._wrapped,arguments));
+    };
+});
+//返回存放在_wrapped属性中的underscore对象
+_.prototype.value = function(){
+    return this._wrapped;
+}
+// 提供一些方法方便其他情况使用
+_.prototype.valueOf = _.prototype.toJSON = _.prototype.value;
+_.prototype.toString = function(){
+    return '' + this._wrapped;
+}
+// 对AMD支持的一些处理
+if(typeof define == 'function' && define.amd){
+    define('underscore',[],function(){return _;});
+}
+
+})
+    }());
+    </script>
+
+    <div>总结</div>
+    <div>
+        1、首先underscore包裹在一个匿名自执行函数当中，
+        2、内部定义了一个“_”变量
+        3、将underscore中的相关方法添加到_原型中，创建的_对象就具备了underscore方法
+        4、将Array.prototype中的相关方法添加到Underscore对象中, 这样Underscore对象也可以直接调用Array.prototype中的方法
+    </div>
+</body>
+</html>
