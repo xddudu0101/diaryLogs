@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>underscore.js源码解析（二）</title>
+</head>
+<body>
+    <div>_.each</div>    
+    <script>
+        _.each = _.forEach = function(obj,iteratee,context){
+            //optimizeCb( )是underscore内部用来执行函数的很重要的方法，这个我们后面再聊
+            iteratee = optimizeCb(iteratee,context);
+            var i,length;
+            if(isArrayLike(obj)){
+                //判断是否是类数组，一般不会传入类似 {length: 3} 这样的数据
+                for(i=0,length=obj.length;i<length;i++){
+                    iteratee(obj[i],i,obj);
+                }
+            }else{
+                //对象处理，这个_.keys( )我们也后面再聊
+                var keys=_.keys(obj);
+                for(i=0,length = keys.length;i<length;i++){
+                    iteratee(obj[keys[i]],keys[i],obj);
+                }
+            }
+            return obj;
+        }
+    </script>
+
+
+
+
+
+</body>
+</html>
