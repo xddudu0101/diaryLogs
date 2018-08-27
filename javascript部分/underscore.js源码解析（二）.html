@@ -28,6 +28,125 @@
             return obj;
         }
     </script>
+    <script>
+    //其中判断是否为类数组的代码如下：
+
+    var MAX_ARRAY_INDEX = Math.pow(2,53) - 1;
+    //获取"length"属性
+    var getLength = property('length');
+    //判断是否是类数组
+    var isArrayLike = function(collection){
+        var length = getLength(collection);
+        return typeof length === 'number' && length >=0 && length <= MAX_ARRAY_INDEX;
+        //拥有 length 属性并且 length 属性值为 Number 类型的元素
+    }
+
+    </script>
+
+    <div>接下来我们来聊上面提到的optimizeCb()</div>
+    <script>
+        var optimizeCb  = function(func,context,argCount){
+            if(context === void 0) return func;
+            //argCount为函数参数的个数，针对不同参数个数进行不同的处理
+            switch(argCount == null ? 3: argCount){
+                //为单值的情况，例如times函数
+                case 1:return function(value){
+                    return func.call(context,value);
+                };
+                 //因为2个参数的情况没用被用到，所以在新版中被删除了
+                 case 3: return function(value,index,collection){
+                     return func.call(context,accumulator,value,index,collection);
+                 };
+                 // 4个参数用于reduce和reduceRight函数
+                 case 4: return function(accumulator,value,index,collection){
+                     return func.call(context,accumulator,value,index,collection);
+                 };
+            }
+            return function(){
+                return func.apply(context,arguments);
+            }
+        }   
+    </script>
+    <div>cb和_.iteratee</div>
+    <script>
+    var cb = function(value,context,argCount){
+       //如果为空，则返回value本身（identity函数就是一个返回本身的函数 ）
+       if(value == null) return _.identity;
+        //如果为函数，则改变所执行函数的作用域
+        if(_.isFunction(value)) return optimizeCb(value,context,argCount);
+         //如果是对象，判断是否匹配（matcher是一个用来判断是否匹配的，我们具体后续再聊）
+        if(_.isObject(value)) return _.matcher(value);
+        return _.property(value);
+    };
+    // 通过调用cb函数，生成每个元素的回调
+    _.iteratee = function(value,context){
+        return cb(value,context,Infinity);
+    }
+
+    </script>
+    <div>_.keys</div>
+    <script>
+        _.keys = function(obj){
+           //如果不是对象，返回空数组
+           if(!_.isObject(obj)) return [];
+           //如果支持原生的方法，就调用原生的keys方法
+           if(nativeKeys) return nativeKeys(obj);
+           var keys =[];
+            //记录所有属性名,获取所有的属性名存在数组当中。
+            //这里的in操作符不仅在对象本身里查找，还会在原型链中查找。_.keys上增加了_.has()判断，将原型上的过滤。
+            for(var key in obj) if(_.has(obj,key)) keys.push(key);  
+
+            // IE9以下枚举bug的兼容处理
+            if(hasEnumBug) collectNonEnumProps(obj,keys);
+            return keys;
+
+        }
+    </script>
+    <div>其中IE9以下枚举bug兼容处理源码如下：</div>
+    <script>
+    //判断是否存在枚举bug
+    var hasEnumBug  = !{toString:null}.propertyIsEnumerable('toString');
+    //不可枚举的属性如下
+    var nonEnumerableProps  = ['valueOf','isPrototypeOf','toString','propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
+    var collectNonEnumProps = function(obj,keys){
+        var nonEnumIdx = nonEnumerableProps.length;
+        var constructor = obj.constructor;
+        var proto = _.isFunction(constructor) && constructor.prototype || ObjProto;
+        // Constructor单独处理部分
+        var prop = 'constructor';
+        //如果对象和keys都存在constructor属性，则把他存入keys数组当中
+        if(_.has(obj,prop)&& !_.contains(keys, prop)) keys.push(prop);
+        while(nonEnumIdx--){
+            prop = nonEnumerableProps[nonEnumIdx];
+            //如果obj对象存在上面数组里那些不可枚举的属性但是不在原型中，并且keys数组里面也没有的话,将其添加进来
+            if(prop in obj && obj[prop] !== proto[prop] && !_.contains(keys,prop)){
+                keys.push(prop);
+            }
+        }
+    }
+    </script>
+    <div>既然都说到了keys那么顺带着也介绍一下allkeys吧。
+            其实keys和allKeys代码对比就少了if (_.has(obj, key))，
+            allKeys是获取所有的，包括继承的
+    </div>
+    <script>
+        _.allKeys = function(obj){
+            if(!_.isObject(obj)) return [];
+            var keys = [];
+            //获取所有的key
+            for(var key in obj) keys.push(key);
+            // 依然是IE9以下枚举bug的兼容处理
+            if(hasEnumBug) collectNonEnumProps(obj, keys);
+            return keys;
+             }
+    </script>
+
+
+
+
+
+
+
 
 
 
