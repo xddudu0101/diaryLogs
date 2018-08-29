@@ -140,13 +140,73 @@
             return keys;
              }
     </script>
+    <div>createAssigner</div>
+    <script>
+        var createAssigner = function(keysFunc,defaults){
+            return function(obj){
+                var length = arguments.length;
+                if(defaults) obj = Object(obj);  //判断是否是对象
+                if(length < 2|| obj == null) return obj; //如果一个参数或者对象为空，则返回这个对象
+                for(var index=1;index < length;index++){
+                //获取对应的keys
+                //keysFunc只有keys和allKeys两种，在下面_.extend和_.extendOwn中可以看到
+                    var source = arguments[index],
+                    keys = keysFunc(source),
+                    l = keys.length;
 
 
+                //进行拷贝处理
+                for(var i=0;i<1;i++){
+                    var key = keys[i];
+                    //defaults是为了对defaults做单独处理而添加的参数，具体的解释_.defaults里做详细分析
+           //在_.extend和_.extendOwn中default没有传值所以是underfinded，所以下面判断条件恒为true，正常进行拷贝处理
+           if(!defaults || obj[key] === void 0) obj[key] = source[key];
+                }
+                }
+                return obj;
+            }
+        };
+        //把后面的source拷贝到第一个对象
+        _.extend = createAssigner(_.allKeys);
+        //把后面的source拷贝到第一个对象（只拷贝实例的
+        _.extendOwn = _.assign = createAssigner(_.keys)
+        //跟_.extend相似，只是当key相同，只会取第一次的键值对，不会被后面的覆盖
+        _.defaults = createAssigner(_.allKeys,true);
+    </script>
+    <div>
+            if (!defaults || obj[key] === void 0) obj[key] = source[key];
+            <div>
+                    此时defaults参数为true，所以就要看obj[key] === void 0这句了，void 0返回的就是underfinded，那么这里换句通俗的话说就是判断key之前没有出现过相同的值时，才进行拷贝处理，如果后面出现相同的key，将不再进行拷贝操作，只保存第一次的键值对结果。
+            </div>
+    </div>
+    <div>_.isMatch</div>
+    <script>
+    //用来判断该属性是否在对象中 （包括原型链）
+    _.isMatch = function(object,attrs){
+        var keys = _.keys(attrs),length = keys.length;
+        if(object == null) return !length;//判断对象是否为空
+        var obj = Object(object);//判断是否是对象
+        for(var i=0;i<length;i++){
+            var key = keys[i];
+            //如果两者值不等或者不在属性不在对象当中则返回false
+            if(attrs[key] !== obj[key] || !(key in obj)) return false;
+        }
+        return true;
+    }
 
-
-
-
-
+    </script>
+    <div> _.matcher和_.matches</div>
+    <script>
+    // 判断对象是否匹配attrs的属性
+    _.matcher = _.matches = function(attrs){
+        //进行拷贝
+        attrs = _.extendOwn({},attrs);
+        return function(obj){
+            //用来判断该属性是否在对象中，上文有提及
+            return _.isMatch(obj,attrs);
+        }
+    }
+    </script>
 
 
 
