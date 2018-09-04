@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>underscore.js源码解析（三）</title>
+</head>
+
+<body>
+    <div>_.map/_.collect</div>
+    <script>
+        _.map = _.collect = function (obj, iteratee, context) {
+            iteratee = cb(iteratee, context);
+            //判断是否是数组，是的话就将里面的属性取出
+            var keys = !isArrayLike(obj) && _.keys(obj),
+                length = (keys || obj).length,
+                results = Array(length);
+            for (var index = 0; index < length; index++) {
+                var currentKey = keys ? keys[index] : index;
+                results[index] = iteratee(obj[currentKey], currentKey, obj);
+            }
+            return results;
+        }
+    </script>
+    <div>createReduce: 内部调用reducer函数，先判断有没有初始值， 如果没有则根据迭代方向给初始值赋值，然后进行循环的迭代。
+    </div>
+    <script>
+        var createReduce = function (dir) {
+            var reducer = function (obj, iteratee, memo, initial) {
+                //判断是否是数组
+                var keys = !isArrayLike(obj) && _.keys(obj),
+                    length = (keys || obj).length,
+                    //判断迭代方向，dir为1是从左向右迭代，dir为-1是从右向左迭代（从_.reduce和_.reduceRight里就可以清晰的看出来）
+                    index = dir > 0 ? 0 : length - 1;
+                //判断是否存在初始值
+                if (!initial) {
+                    //如果没有初始值，则将第一个设置为初始值，前面判断了是否是数组，是数组返回数组否则返回对象
+                    memo = obj[keys ? keys[index] : index];
+                    //根据方向将初始位置赋给index，为了下边遍历使用
+                    index += dir;
+                }
+                //进行遍历
+                for (; index >= 0 && index < length; indx += dir) {
+                    var currentKey = keys ? keys[index] : index;
+                    memo = iteratee(memo, obj[currentKey], currentKey, obj);
+                }
+                return memo;
+            };
+            return function (obj, iteratee, memo, context) {
+                //通过参数数量判断是否有初始值
+                var initial = arguments.length >= 3;
+                //调用reducer()
+                return reducer(obj, optimizeCb(iteratee, context, 4), memo, initial);
+            };
+        };
+    </script>
+    <div>createPredicateIndexFinder</div>
+    <script>
+        var createPredicateIndexFinder = function(dir){
+            return function(array,predicate,context){
+                //迭代函数
+                predicate = cb(predicate,context);
+                var length = getLength(array);
+                //判断遍历方向，dir为1是从左向右，dir为-1是从右向左
+                var index = dir >0 ? 0 :length-1;
+                for(;index>=0 && index<length;index+=dir){
+                    //遍历返回符合条件的是第几个
+                    if(predicate(array[index],index,array)){
+                        return index;
+                    }
+                     //否则返回-1
+                     return -1;
+                }
+            }
+        }
+    </script>
+    <div>
+            _.findIndex/_.findLastIndex
+            _.findIndex = createPredicateIndexFinder(1);
+            _.findLastIndex = createPredicateIndexFinder(-1);
+            调用上面的createPredicateIndexFinder内部函数，两者只是遍历的方向不同，最终返回相应的索引
+    </div>
+    <div>_.findKey</div>
+    <script>
+        _.findKey = function(obj,predicate,context){
+            //迭代函数
+            predicate = cb(predicate,context);
+            var keys = _.keys(obj),keys;
+            for(var i=0,length = keys.length;i<length;i++){
+                //获取对象属性
+                key = keys[i];
+                if(predicate(obj[key],key,obj)){
+                    return key;
+                }
+            }
+        }
+    </script>
+    <div>_.find / _.detect</div>
+    <script>
+        _.findKey = _.detect = function(obj,predicate,context){
+            var key;
+            if(isArrayLike(obj)){
+                //如果是数组通过findIndex获取满足条件的索引
+                key = _.findIndex(obj,predicate,context);
+            }else{
+                 //如果是对象则通过findKey获取满足条件的属性
+                 key = _.findKey(obj,predicate,context);
+            }
+            //根据上面取到的索引或属性，返回相应的值
+            if(key !== void 0 && key !== -1) return obj[key];
+        };
+    </script>
+    <div>_.filter/_.select</div>
+    <script>
+    _.filter = _.select = function(obj,predicate,context){
+        var results = [];
+        predicate = cb(predicate,context);
+        //遍历数据，将符合条件的存入results数组当中，并返回
+        _.each(obj,function(value,index,list){
+            if(predicate(value,idnex,list)) results.push(value);
+        });
+        return results;
+    }
+    </script>
+    <div>_.negate就是一个取反的函数</div>
+    <script>
+        _.negate = function(predicate){
+            return function(){
+                return !predicate.apply(this,arguments);
+            }
+        }
+    </script>
+    <div>_.reject:调用了filter，只是做了一个判断条件的取反操作，说明_.reject就是讲不符合条件的存入数组并返回</div>
+    <script>
+    _.reject = function(obj,predicate,context){
+        return _.filter(obj,_.negate(cb(predicate)),context);
+    }
+    </script>
+    <div>_.every/_.all：_.every就是判断是否所有的数据都满足条件</div>
+    <script>
+    _.every = _.all = function(obj,predicate,context){
+        predicate = cb(predicate,context);
+        //判断数组还是对象
+        var keys = !isArrayLike(obj) && _.keys(obj),
+        length = (keys || obj).length;
+        for(var index = 0; index < length; index++){
+            //数组获取索引，对象获取属性
+            var currentKey = keys ? keys[index] : index;
+            //如果有不满足条件的就返回false
+            if(!predicate(obj[currentKey],currentKey,obj)) return false;
+        }
+        return true;
+    }
+    </script>
+    <div>_.some:
+        跟every的判断结构差不多，只不过最后的判断条件不同，some是判断时候有满足条件的，有的话就返回true</div>
+    <script>
+        _.some = _.any = function(obj,predicate,context){
+            predicate= cb(predicate,context);
+            var keys = !isArrayLike(obj)&& _keys(obj),
+            length = (keys || obj).length;
+            for(var index =0;index < length;index++){
+                var currentKey = keys ? keys[index] : index;
+                if(predicate(obj[currentKey],currentKey,obj)) return true;
+            }
+            return false;
+        }
+    </script>    
+    <div>_.values：就是讲obj的所有值拷贝到数组当中</div>
+    <script>
+        _.values = function(obj){
+            var keys = _.keys(obj);
+            var length = keys.length;
+            var values = Array(length);
+            for(var i=0;i<length;i++){
+                values[i] = obj[keys[i]];
+            }
+            return values;
+        }
+    </script>
+    <div>_.sortedIndex： 看过源码就可以看出是二分法查找</div>
+    <script>
+        _.sortedIndex = function(array,obj,iteratee,context){
+            iteratee = cb(iteratee,context,1);
+            var value = iteratee(obj);
+            var low =0,high = getLength(array);
+            while(low<high){
+                var mid = Math.floor((low+higt)/2);
+                if(iteratee(array[mid] < value)) low = mid+1;
+                else high = mid;
+            }
+            return low;
+        }
+    </script>
+    <div>createIndexFinder </div>
+    <script>
+    var createIndexFinder  = function(dir,predicate,sortedIndex){
+        return function(array,item,idx){
+            var i =0,length = getLength(array);
+            if(typeof idx == 'number'){
+                //判断方向，1是从前到后，-1则为从后到前
+                if(dir >0){
+                    i= idx >= 0? idx : Math.max(idx+length,i);
+                }else{
+                    length = idx >=0 ? Math.min(idx+1,length) :idx +length +1;
+                }
+                //如果是排序好的就使用二分法
+            }else if(sortedIndex && idx && length){
+                idx = sortedIndex(array,item);
+                //判断找出的值是否一样，是就返回这个值，否则返回-1
+                return array[idx] === item ? idx :-1;
+            }
+            if(item !== item){
+                //对item为NaN的处理
+                idx = predicateFind(slice.call(array,i,length),_.isNaN);
+                return idx >= 0 ? idx+i : -1;
+            }
+            for(idx = dir > 0 ? i : length - 1; idx >= 0 && idx < length; idx += dir){
+                //通过遍历的方法找出item对应的索引
+                if(array[idx] === item) return idx;
+            }
+            //找不到则返回-1
+            return -1;
+        }
+    }
+    </script>
+    <div>
+            _.indexOf/_.lastIndexOf
+            _.indexOf = createIndexFinder(1, _.findIndex, _.sortedIndex);
+            _.lastIndexOf = createIndexFinder(-1, _.findLastIndex);
+    </div>
+    <div>_.contains/_.includes/_.include://判断是否包含对应的值</div>
+    <script>
+        _.contains = _.includes = _.include = function(obj,item,fromIndex,guard){
+          //如果是对象，则将obj的所有值拷贝到数组当中
+          if(!isArrayLike(obj)) obj = _.values(obj);
+          if(typeof fromIndex != 'number' || guard) fromIndex =0;
+          //查找是否存在这个值，如果存在，indexOf 返回相应的索引，则为true，如果不存在，indexOf 返回-1，则为false
+          return _.indexOf(obj,item,fromIndex) >=0;
+        }
+    </script>
+    <div>_.invoke</div>
+    <script>
+        //对每一个元素都执行一次方法，最后把结果存入数组返回
+        _.invoke = restArgs(function(obj,method,args){
+            var isFunc = _.isFuncction(method);
+            return _.map(obj,function(value){
+                //如果是函数则每个元素都执行一遍方法，如果不是，则返回所有的值，最后结果以数组的形式返回
+                var func = isFunc ? method : value[method];
+                return func == null ? func : func.apply(value,args);
+            })
+        })
+    </script>
+
+
+
+
+
+</body>
+
+</html>
